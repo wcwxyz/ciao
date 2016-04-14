@@ -32,6 +32,7 @@ type insStartCmd struct {
 	metaData []byte
 	frame    *ssntp.Frame
 	cfg      *vmConfig
+	rcvStamp time.Time
 }
 type insRestartCmd struct{}
 type insDeleteCmd struct {
@@ -82,6 +83,10 @@ func instanceLoop(cmdCh chan interface{}, instance string, cfg *vmConfig, wg *sy
 	var monitorCloseCh chan struct{}
 	var statsTimer <-chan time.Time
 	var vm virtualizer
+	var rcvStamp time.Time
+	var startStamp time.Time
+	var createdStamp time.Time
+	var st *startTimes
 
 	if simulate == true {
 		vm = &simulation{}
@@ -116,13 +121,15 @@ DONE:
 			switch cmd := cmd.(type) {
 			case *insStartCmd:
 				glog.Info("Found start command")
+				startStamp = time.Now()
 				if monitorCh != nil {
 					startErr := &startError{nil, payloads.AlreadyRunning}
 					glog.Errorf("Unable to start instance[%s]", string(startErr.code))
 					startErr.send(&ac.ssntpConn, instance)
 					continue
 				}
-				startErr := processStart(cmd, instanceDir, vm, &ac.ssntpConn)
+				var startErr *startError
+				st, startErr = processStart(cmd, instanceDir, vm, &ac.ssntpConn)
 				if startErr != nil {
 					glog.Errorf("Unable to start instance[%s]: %v", string(startErr.code), startErr.err)
 					startErr.send(&ac.ssntpConn, instance)
@@ -136,6 +143,9 @@ DONE:
 					}
 					continue
 				}
+
+				rcvStamp = cmd.rcvStamp
+				createdStamp = time.Now()
 
 				connectedCh = make(chan struct{})
 				monitorCloseCh = make(chan struct{})
@@ -232,7 +242,26 @@ DONE:
 			monitorCh = nil
 			statsTimer = nil
 			ovsCh <- &ovsStateChange{instance, ovsStopped}
+			st = nil
 		case <-connectedCh:
+
+			if st != nil {
+				runningStamp := time.Now()
+				glog.Info("================ START TRACE ============")
+				glog.Infof("Total time to start instance: %d ms", (runningStamp.Sub(rcvStamp))/time.Millisecond)
+				glog.Infof("Launcher routing time: %d ms", (startStamp.Sub(rcvStamp))/time.Millisecond)
+				glog.Infof("Creating time: %d ms", (createdStamp.Sub(startStamp))/time.Millisecond)
+				glog.Infof("Time to running: %d ms", (runningStamp.Sub(startStamp))/time.Millisecond)
+				glog.Infof("Running detection time: %d ms", (runningStamp.Sub(createdStamp))/time.Millisecond)
+				glog.Info("Detailed creation times")
+				glog.Info("-----------------------")
+				glog.Infof("Backing Image Check: %d", st.backingImageCheck.Sub(startStamp)/time.Millisecond)
+				glog.Infof("Network creation: %d", st.networkStamp.Sub(st.backingImageCheck)/time.Millisecond)
+				glog.Infof("VM/Container creation: %d", st.creationStamp.Sub(st.networkStamp)/time.Millisecond)
+				glog.Infof("Time to start: %d", st.runStamp.Sub(st.creationStamp)/time.Millisecond)
+				glog.Info("=========================================")
+			}
+
 			connectedCh = nil
 			vm.connected()
 			ovsCh <- &ovsStateChange{instance, ovsRunning}

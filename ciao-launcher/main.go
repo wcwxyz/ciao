@@ -176,7 +176,7 @@ func (client *agentClient) CommandNotify(cmd ssntp.Command, frame *ssntp.Frame) 
 				glog.Errorf("Unable to parse YAML: %v", payloadErr.err)
 				return
 			}
-			client.cmdCh <- &cmdWrapper{cfg.Instance, &insStartCmd{cn, md, frame, cfg}}
+			client.cmdCh <- &cmdWrapper{cfg.Instance, &insStartCmd{cn, md, frame, cfg, time.Now()}}
 		}()
 	case ssntp.RESTART:
 		go func() {
