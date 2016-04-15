@@ -123,8 +123,6 @@ type overseer struct {
 	diskSpaceAvailable int
 	memoryAvailable    int
 	traceFrames        *list.List
-	stateChanges       int
-	statsTimeCount     int
 }
 
 type cnStats struct {
@@ -557,7 +555,6 @@ func (ovs *overseer) processCommand(cmd interface{}) {
 
 		delete(ovs.instances, cmd.instance)
 		if !cmd.suicide {
-			ovs.stateChanges++
 			ovs.sendInstanceDeletedEvent(cmd.instance)
 		}
 		cmd.errCh <- nil
@@ -584,7 +581,6 @@ func (ovs *overseer) processCommand(cmd interface{}) {
 		target := ovs.instances[cmd.instance]
 		if target != nil {
 			target.running = cmd.state
-			ovs.stateChanges++
 		}
 	case *ovsStatsUpdateCmd:
 		if glog.V(1) {
@@ -618,15 +614,10 @@ DONE:
 			}
 			ovs.processCommand(cmd)
 		case <-statsTimer:
-			ovs.statsTimeCount++
-			if !ovs.ac.ssntpConn.isConnected() ||
-				(ovs.stateChanges == 0 && ovs.statsTimeCount < 15) {
+			if !ovs.ac.ssntpConn.isConnected() {
 				statsTimer = time.After(time.Second * statsPeriod)
 				continue
 			}
-
-			ovs.statsTimeCount = 0
-			ovs.stateChanges = 0
 
 			cns := getStats()
 			ovs.updateAvailableResources(cns)
