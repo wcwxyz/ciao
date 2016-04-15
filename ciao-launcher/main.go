@@ -112,7 +112,7 @@ const (
 	logDir         = "/var/lib/ciao/logs/launcher"
 	instanceState  = "state"
 	lockFile       = "client-agent.lock"
-	statsPeriod    = 10
+	statsPeriod    = 2
 	resourcePeriod = 30
 )
 
