@@ -110,7 +110,7 @@ DONE:
 		case <-statsTimer:
 			d, m, c := vm.stats()
 			ovsCh <- &ovsStatsUpdateCmd{instance, m, d, c}
-			statsTimer = time.After(time.Second * statsPeriod)
+			statsTimer = time.After(time.Second * resourcePeriod)
 		case cmd := <-cmdCh:
 			select {
 			case <-doneCh:
@@ -267,7 +267,7 @@ DONE:
 			ovsCh <- &ovsStateChange{instance, ovsRunning}
 			d, m, c := vm.stats()
 			ovsCh <- &ovsStatsUpdateCmd{instance, m, d, c}
-			statsTimer = time.After(time.Second * statsPeriod)
+			statsTimer = time.After(time.Second * resourcePeriod)
 		}
 	}
 
