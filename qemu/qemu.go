@@ -668,6 +668,9 @@ type Kernel struct {
 	// Path is the guest kernel path on the host filesystem.
 	Path string
 
+	// InitrdPath is the guest initrd path on the host filesystem.
+	InitrdPath string
+
 	// Params is the kernel parameters string.
 	Params string
 }
@@ -909,6 +912,10 @@ func (config *Config) appendKernel() {
 		config.qemuParams = append(config.qemuParams, "-kernel")
 		config.qemuParams = append(config.qemuParams, config.Kernel.Path)
 
+		if config.Kernel.InitrdPath != "" {
+			config.qemuParams = append(config.qemuParams, "-initrd")
+			config.qemuParams = append(config.qemuParams, config.Kernel.InitrdPath)
+		}
 		if config.Kernel.Params != "" {
 			config.qemuParams = append(config.qemuParams, "-append")
 			config.qemuParams = append(config.qemuParams, config.Kernel.Params)
