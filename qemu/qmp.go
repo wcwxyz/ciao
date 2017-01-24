@@ -398,7 +398,7 @@ func startQMPLoop(conn io.ReadWriteCloser, cfg QMPConfig,
 	return q
 }
 
-func (q *QMP) executeCommand(ctx context.Context, name string, args map[string]interface{},
+func (q *QMP) ExecuteCommand(ctx context.Context, name string, args map[string]interface{},
 	filter *qmpEventFilter) error {
 	var err error
 	resCh := make(chan qmpResult)
@@ -505,17 +505,17 @@ func (q *QMP) Shutdown() {
 
 // ExecuteQMPCapabilities executes the qmp_capabilities command on the instance.
 func (q *QMP) ExecuteQMPCapabilities(ctx context.Context) error {
-	return q.executeCommand(ctx, "qmp_capabilities", nil, nil)
+	return q.ExecuteCommand(ctx, "qmp_capabilities", nil, nil)
 }
 
 // ExecuteStop sends the stop command to the instance.
 func (q *QMP) ExecuteStop(ctx context.Context) error {
-	return q.executeCommand(ctx, "stop", nil, nil)
+	return q.ExecuteCommand(ctx, "stop", nil, nil)
 }
 
 // ExecuteCont sends the cont command to the instance.
 func (q *QMP) ExecuteCont(ctx context.Context) error {
-	return q.executeCommand(ctx, "cont", nil, nil)
+	return q.ExecuteCommand(ctx, "cont", nil, nil)
 }
 
 // ExecuteSystemPowerdown sends the system_powerdown command to the instance.
@@ -524,13 +524,13 @@ func (q *QMP) ExecuteSystemPowerdown(ctx context.Context) error {
 	filter := &qmpEventFilter{
 		eventName: "SHUTDOWN",
 	}
-	return q.executeCommand(ctx, "system_powerdown", nil, filter)
+	return q.ExecuteCommand(ctx, "system_powerdown", nil, filter)
 }
 
 // ExecuteQuit sends the quit command to the instance, terminating
 // the QMP instance immediately.
 func (q *QMP) ExecuteQuit(ctx context.Context) error {
-	return q.executeCommand(ctx, "quit", nil, nil)
+	return q.ExecuteCommand(ctx, "quit", nil, nil)
 }
 
 // ExecuteBlockdevAdd sends a blockdev-add to the QEMU instance.  device is the
@@ -548,7 +548,7 @@ func (q *QMP) ExecuteBlockdevAdd(ctx context.Context, device, blockdevID string)
 			"id": blockdevID,
 		},
 	}
-	return q.executeCommand(ctx, "blockdev-add", args, nil)
+	return q.ExecuteCommand(ctx, "blockdev-add", args, nil)
 }
 
 // ExecuteDeviceAdd adds the guest portion of a device to a QEMU instance
@@ -565,7 +565,7 @@ func (q *QMP) ExecuteDeviceAdd(ctx context.Context, blockdevID, devID, driver, b
 	if bus != "" {
 		args["bus"] = bus
 	}
-	return q.executeCommand(ctx, "device_add", args, nil)
+	return q.ExecuteCommand(ctx, "device_add", args, nil)
 }
 
 // ExecuteXBlockdevDel deletes a block device by sending a x-blockdev-del command.
@@ -575,7 +575,7 @@ func (q *QMP) ExecuteXBlockdevDel(ctx context.Context, blockdevID string) error 
 	args := map[string]interface{}{
 		"id": blockdevID,
 	}
-	return q.executeCommand(ctx, "x-blockdev-del", args, nil)
+	return q.ExecuteCommand(ctx, "x-blockdev-del", args, nil)
 }
 
 // ExecuteDeviceDel deletes guest portion of a QEMU device by sending a
@@ -593,5 +593,5 @@ func (q *QMP) ExecuteDeviceDel(ctx context.Context, devID string) error {
 		dataKey:   "device",
 		dataValue: devID,
 	}
-	return q.executeCommand(ctx, "device_del", args, filter)
+	return q.ExecuteCommand(ctx, "device_del", args, filter)
 }
