@@ -65,6 +65,9 @@ const (
 	// VirtioSerial is the serial device driver.
 	VirtioSerial = "virtio-serial-pci"
 
+	// VirtioSerial is the scsi pci device driver.
+	VirtioScsiPci = "virtio-scsi-pci"
+
 	// VirtioBlock is the block device driver.
 	VirtioBlock = "virtio-blk"
 
@@ -421,8 +424,7 @@ func (netdev NetDevice) QemuParams(config *Config) []string {
 	return qemuParams
 }
 
-// SerialDevice represents a qemu serial device.
-type SerialDevice struct {
+type GenericDevice struct {
 	// Driver is the qemu device driver
 	Driver DeviceDriver
 
@@ -430,8 +432,11 @@ type SerialDevice struct {
 	ID string
 }
 
-// Valid returns true if the SerialDevice structure is valid and complete.
-func (dev SerialDevice) Valid() bool {
+// SerialDevice represents a qemu serial device.
+type SerialDevice GenericDevice
+
+// Valid returns true if the GenericDevice structure is valid and complete.
+func (dev GenericDevice) Valid() bool {
 	if dev.Driver == "" || dev.ID == "" {
 		return false
 	}
@@ -440,7 +445,7 @@ func (dev SerialDevice) Valid() bool {
 }
 
 // QemuParams returns the qemu parameters built out of this serial device.
-func (dev SerialDevice) QemuParams(config *Config) []string {
+func (dev GenericDevice) QemuParams(config *Config) []string {
 	var deviceParams []string
 	var qemuParams []string
 
